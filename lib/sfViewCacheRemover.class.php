@@ -11,6 +11,55 @@
 class sfViewCacheRemover
 {
   /**
+   * Static variable to hold the path to the super cache plugin cache dir
+   */
+  protected static $_superCachePath = null;
+
+  /**
+   * Get the path to super cache if it is enabled
+   *
+   * @return string $superCachePath
+   */
+  public static function getSuperCachePath()
+  {
+    if (is_null(self::$_superCachePath))
+    {
+      $config = sfFilterConfigHandler::getConfiguration(sfContext::getInstance()->getConfiguration()->getConfigPaths('config/filters.yml'));
+
+      // find super cache configuration
+      $found = false;
+      $cacheDir = 'cache';
+      foreach ($config as $value)
+      {
+        if ('sfSuperCacheFilter' == $value['class'])
+        {
+          $found = true;
+          if (isset($value['param']['cache_dir']))
+          {
+            $cacheDir = $value['param']['cache_dir'];
+          }
+
+          break;
+        }
+      }
+
+      if ($found)
+      {
+        // clear the cache
+        $cacheDir = sfConfig::get('sf_web_dir').'/'.$cacheDir;
+        if (is_dir($cacheDir))
+        {
+          self::$_superCachePath = $cacheDir;
+        }
+      }
+    } else {
+      self::$_superCachePath = false;
+    }
+
+    return self::$_superCachePath;
+  }
+
+  /**
    * Clear the routes of an application for a given Doctrine_Record instance
    *
    * @param mixed $application       Array or string of applications to remove cache for routes
@@ -124,11 +173,19 @@ class sfViewCacheRemover
       $path = $path[strlen($path) - 1] != '/' ? $path.'/' : $path;
 
       $cacheDir = sfConfig::get('sf_cache_dir').'/'.$application.'/'.$env.'/template/'.$host.'/all';
-      $path = $cacheDir.$path;
+      $fullPath = $cacheDir.$path;
+      
+      $partialCachePath = $cacheDir.'/sf_cache_partial'.$path;
+      self::clearPath($partialCachePath, true);
+    } else {
+      $fullPath = $path;
     }
 
-    $processedPath = self::_processPath($path, $record);
+    $processedPath = self::_processPath($fullPath, $record);
     self::clearPath($processedPath, $manual);
+
+    $processedPath = self::_processPath($path, $record);
+    self::clearSuperCachePath($processedPath);
   }
 
   /**
@@ -148,6 +205,20 @@ class sfViewCacheRemover
       sfToolkit::clearGlob($path);
     } else {
       $cacheManager->remove($path);
+    }
+  }
+
+  /**
+   * Clear the given path from the super cache plugin
+   *
+   * @param string $path
+   * @return void
+   */
+  public static function clearSuperCachePath($path)
+  {
+    if ($superCachePath = self::getSuperCachePath())
+    {
+      self::clearPath($superCachePath.$path, true);
     }
   }
 
