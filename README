@@ -1,0 +1,131 @@
+# sfDoctrinePlugin View Cache Plugin
+
+This Doctrine behavior gives you the ability to integrate with the symfony view
+cache so that you can specify items to clear from the cache when records are 
+inserted, updated or deleted. It even integrates with the symfony routing system
+and will automatically detect what namespaces to clear in the cache based on the
+objects you have mapped to URLs.
+
+Below you will find some example syntaxes:
+
+## Globally Clear Cache
+
+Sometimes it may just be easiest to clear the entire cache when a model is 
+changed. You can do this with the global option:
+
+    [yml]
+    BlogPost:
+      actAs:
+        sfViewCache:
+          global: true
+      columns:
+        title: string(255)
+        body: clob
+
+## Clearing Items
+
+You can clear items from the cache the normal way just as you would with the 
+`sfViewCacheManager::remove` or `sfToolKit::clearGlob` methods in your project
+code.
+
+### View Cache Manager
+
+You can use the `sfViewCacheManager` to remove items from your cache just like
+you would in your project code like the following:
+
+    [php]
+    $cacheManager = $this->getContext()->getViewCacheManager();
+    $cacheManager->remove('blog/view?slug='.$blogPost->slug);
+
+Here is a similar example where we add that cache clearing functionality to our
+model:
+
+    [yml]
+    BlogPost:
+      actAs:
+        sfViewCache:
+          items:
+            blog_index: blog/index
+            blog_post_view: blog/view?slug=:slug
+            blog_latest: blog/latest
+      columns:
+        title: string(255)
+        body: clob
+
+> **NOTE**
+> In order to clear the cache using the `sfViewCacheManager` the `sfConfig` setting `sf_cache` must be set to true and it can only clear cache items for the application the behavior is invoked from.
+
+### Manual
+
+You can use the `manual` option to specify the behavior to simply use 
+`sfToolKit::clearGlob` to find the cache for the pattern you specify. Just like 
+the example above you can use the `:field_name` syntax to replace variables in the path from the object that invokes the behavior.
+
+    [yml]
+    BlogPost:
+      actAs:
+        sfViewCache:
+          items:
+            blog_index: blog/index
+            blog_post_view:
+              manual: true
+              path: blog/:slug
+            blog_latest:
+              manual: true
+              path: blog/latest
+      columns:
+        title: string(255)
+        body: clob
+
+## Clear Routes
+
+Want Doctrine to try and find all the cache items that are 
+related to the model with the behavior is attached to? Simply enable the 
+`clear_routes` option for a certain application and it will parse the routes and 
+find the modules and actions bound to the model.
+
+    [yml]
+    BlogPost:
+      actAs:
+        sfViewCache:
+          clear_routes: frontend
+      columns:
+        title: string(255)
+        body: clob
+
+Here are three example routes that would be matched and cleared:
+
+    [yml]
+    blog:
+      url:   /blog
+      param: { module: blog, action: index }
+      class: sfDoctrineRoute
+      options: { model: BlogPost, type: list, method: retrieveBlogIndex }
+
+    latest_blog:
+      url:   /blog/latest
+      param: { module: blog, action: latest }
+      class: sfDoctrineRoute
+      options: { model: BlogPost, type: list, method: retrieveLatest }
+
+    blog_post:
+      url:   /blog/:slug
+      param: { module: blog, action: view  }
+      class: sfDoctrineRoute
+      options: { model: BlogPost, type: object }
+
+## Insert, Update, Delete?
+
+Want to control whether the the behavior is triggered on insert, update and deleted? You can use the `on_insert`, `on_update` and `on_delete` and options:
+
+    [yml]
+    BlogPost:
+      actAs:
+        sfViewCache:
+          global: true
+          on_insert: true
+          on_delete: false
+          on_update: false
+      columns:
+        title: string(255)
+        body: clob
