@@ -36,7 +36,8 @@ class sfViewCacheListener extends Doctrine_Record_Listener
    */
   public function postInsert(Doctrine_Event $event)
   {
-    if ($this->_template->getOption('on_insert'))
+    $options = $this->_template->getOptions();
+    if ($options['on_insert'])
     {
       $this->_handleEvent($event);
     }
