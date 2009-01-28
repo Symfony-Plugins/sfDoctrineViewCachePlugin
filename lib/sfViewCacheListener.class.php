@@ -84,6 +84,8 @@ class sfViewCacheListener extends Doctrine_Record_Listener
   {
     $record = $event->getInvoker();
 
+    sfViewCacheRemover::clearCacheForRecord($record);
+
     $options = $this->_template->getOptions();
 
     if ($options['global'] && empty($options['items']))

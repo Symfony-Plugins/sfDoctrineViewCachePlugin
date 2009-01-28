@@ -222,6 +222,25 @@ class sfViewCacheRemover
     }
   }
 
+  public static function clearCacheForRecord(Doctrine_Record $record)
+  {
+    $models = sfViewCacheItemManager::getCachedUris();
+    foreach ($models as $model => $uris)
+    {
+      if ($model == $record->getTable()->getOption('name'))
+      {
+        foreach ($uris as $uri)
+        {
+          $uri = str_replace('@', '', $uri);
+          $uri = str_replace(array('?', '&', '='), array('/', '/', '/'), $uri);
+
+          $path = sfConfig::get('sf_cache_dir').'/*/*/template/*/all/'.$uri . '.cache';
+          self::clearPath($path, false);
+        }
+      }
+    }
+  }
+
   /**
    * Process a given path and replace params with values from Doctrine_Record instance
    *
