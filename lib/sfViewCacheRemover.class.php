@@ -51,9 +51,9 @@ class sfViewCacheRemover
         {
           self::$_superCachePath = $cacheDir;
         }
+      } else {
+        self::$_superCachePath = false;
       }
-    } else {
-      self::$_superCachePath = false;
     }
 
     return self::$_superCachePath;
@@ -185,7 +185,7 @@ class sfViewCacheRemover
     self::clearPath($processedPath, $manual);
 
     $processedPath = self::_processPath($path, $record);
-    self::clearSuperCachePath($processedPath);
+    self::clearSuperCachePath($path);
   }
 
   /**
@@ -218,6 +218,9 @@ class sfViewCacheRemover
   {
     if ($superCachePath = self::getSuperCachePath())
     {
+      $e = explode('.', $path);
+      $end = end($e);
+      $path = $end != 'php' ? $path.'.php':$path;
       self::clearPath($superCachePath.$path, true);
     }
   }
@@ -234,8 +237,13 @@ class sfViewCacheRemover
           $uri = str_replace('@', '', $uri);
           $uri = str_replace(array('?', '&', '='), array('/', '/', '/'), $uri);
 
-          $path = sfConfig::get('sf_cache_dir').'/*/*/template/*/all/'.$uri . '.cache';
-          self::clearPath($path, false);
+          if ($uri[0] == '/')
+          {
+            self::clearSuperCachePath($uri);
+          } else {
+            $path = sfConfig::get('sf_cache_dir').'/*/*/template/*/all/'.$uri.'.cache';
+            self::clearPath($path, false);
+          }
         }
       }
     }

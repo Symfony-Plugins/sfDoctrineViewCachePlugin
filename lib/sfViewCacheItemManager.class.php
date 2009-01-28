@@ -59,6 +59,8 @@ class sfViewCacheItemManager extends sfViewCacheManager
       }
     }
 
+    $pathInfoForSuperCache = sfContext::getInstance()->getRequest()->getPathInfo();
+
     foreach ($models as $model)
     {
       if (!isset(self::$_cachedUris[$model]))
@@ -69,6 +71,11 @@ class sfViewCacheItemManager extends sfViewCacheManager
       if (!in_array(self::$_lastCheckedUri, self::$_cachedUris[$model]))
       {
         self::$_cachedUris[$model][] = self::$_lastCheckedUri;
+      }
+
+      if (!in_array($pathInfoForSuperCache, self::$_cachedUris[$model]))
+      {
+        self::$_cachedUris[$model][] = $pathInfoForSuperCache;
       }
     }
 
