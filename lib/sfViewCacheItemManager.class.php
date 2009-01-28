@@ -35,27 +35,28 @@ class sfViewCacheItemManager extends sfViewCacheManager
     self::readCachedUrisFromDisk();
 
     $records = array();
+    $models = array();
     $values = sfOutputEscaper::unescape($parameters);
     foreach ($values as $value)
     {
       if ($value instanceof Doctrine_Record)
       {
-        $records[] = $value;
+        $models[] = $value->getTable()->getOption('name');
       } else if ($value instanceof Doctrine_Collection) {
         foreach ($value as $record)
         {
-          $records[] = $record;
+          $models[] = $record->getTable()->getOption('name');
         }
+        $models[] = $value->getTable()->getOption('name');
       }
     }
 
-    $models = array();
-    foreach ($records as $record)
+    foreach ($models as $model)
     {
-      $models[] = $record->getTable()->getOption('name');
-      foreach ($record->getReferences() as $reference)
+      $relations = Doctrine::getTable($model)->getRelations();
+      foreach ($relations as $relation)
       {
-        $models[] = $reference->getTable()->getOption('name');
+        $models[] = $relation->getTable()->getOption('name');
       }
     }
 
