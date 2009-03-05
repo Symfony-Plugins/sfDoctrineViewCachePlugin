@@ -68,6 +68,11 @@ class sfViewCacheRemover
    */
   public static function clearRoutes($applications = null, Doctrine_Record $record)
   {
+    if (!sfContext::hasInstance())
+    {
+      return;
+    }
+
     if (is_string($applications))
     {
       $applications = (array) $applications;
@@ -151,6 +156,10 @@ class sfViewCacheRemover
    */
   public static function clearItem($item, Doctrine_Record $record)
   {
+    if (!sfContext::hasInstance())
+    {
+      return;
+    }
     // Allow item to be a string since all other item values are defaulted
     if (is_string($item))
     {
