@@ -97,6 +97,7 @@ class sfViewCacheRemover
         );
       }
 
+      $items = array();
       $routes = sfYaml::load($routeFile);
       foreach ($routes as $name => $route)
       {
@@ -122,7 +123,6 @@ class sfViewCacheRemover
             $allRoutes[$name] = $route;
           }
 
-          $items = array();
           foreach ($allRoutes as $name => $route)
           {
             $options = $route->getDefaults();
